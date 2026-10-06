@@ -14,6 +14,9 @@ export default function HalamanUtama() {
     const [pesanError, setPesanError] = useState<string | null>(null);
     const teksTertunda = useDebounce(teksCari, 800);
 
+    // Nomor urut permintaan — bertahan antar-render tanpa memicu render ulang
+    const requestIdRef = useRef(0);
+
     useEffect(() => {
         if (teksTertunda.trim().length === 0) {
             setHasil([]);
@@ -23,12 +26,22 @@ export default function HalamanUtama() {
         ambilData(teksTertunda);
     }, [teksTertunda]);
     async function ambilData(nama: string) {
+        // Tandai permintaan ini dengan nomor urut baru
+        const idSaatIni = ++requestIdRef.current;
+
         setSedangMemuat(true);
         setPesanError(null);
         try {
             const data = await cariKota(nama);
+
+            // Abaikan hasil jika sudah ada permintaan lebih baru
+            if (idSaatIni !== requestIdRef.current) return;
+
             setHasil(data);
         } catch (err) {
+            // Abaikan error dari permintaan yang sudah basi
+            if (idSaatIni !== requestIdRef.current) return;
+
             setPesanError("Gagal mengambil data. Periksa koneksi internet Anda.");
         } finally {
             setSedangMemuat(false);
