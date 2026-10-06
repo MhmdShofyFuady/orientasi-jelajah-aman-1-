@@ -35,6 +35,8 @@ export default function HalamanUtama() {
         const idSaatIni = ++requestIdRef.current;
         setSedangMemuat(true);
         setPesanError(null);
+        setCuaca(null);
+        setKualitasUdara(null);
         try {
             const [dataCuaca, dataAQI] = await Promise.all([
                 ambilCuaca(kota.latitude, kota.longitude),
