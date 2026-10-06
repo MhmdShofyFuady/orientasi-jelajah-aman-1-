@@ -1,5 +1,5 @@
-import { View, Button } from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import { Button, View } from "react-native";
 import WeatherCard from "../../components/WeatherCard";
 
 export default function HalamanDetail() {
@@ -9,7 +9,7 @@ export default function HalamanDetail() {
         <View style={{ padding: 16, gap: 16 }}>
             <WeatherCard kota={kota} suhu={29} tingkatAQI="BAIK" />
             <Button
-                title="⭐ Tambah ke Favorit"
+                title="Tambahkan ke Favorit"
                 onPress={() => router.push("/tambah-favorit")}
             />
         </View>
