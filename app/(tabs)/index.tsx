@@ -78,8 +78,13 @@ export default function HalamanUtama() {
             )}
             {cuaca && (
                 <Text style={{ fontSize: 12, color: "#888" }}>
-                    Kondisi: {labelKodeCuaca(cuaca.saatIni.kodeCuaca)} • Angin
-                    {cuaca.saatIni.kecepatanAngin} km/j
+                    Kondisi: {labelKodeCuaca(cuaca.saatIni.kodeCuaca)} • Angin {cuaca.saatIni.kecepatanAngin} km/j
+                    {"\n"}Max: {cuaca.harian.suhuMaksimal[0]}°C • Min: {cuaca.harian.suhuMinimal[0]}°C
+                </Text>
+            )}
+            {kualitasUdara && (
+                <Text style={{ fontSize: 11, color: "#888", textAlign: "center" }}>
+                    PM2.5: {kualitasUdara.pm25} • PM10: {kualitasUdara.pm10}
                 </Text>
             )}
             <AtribusiCuaca />
