@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { ActivityIndicator, Button, Text, TouchableOpacity, View } from "react-native";
-import { router } from "expo-router";
-import { mintaIzinLokasi, ambilKoordinatSaatIni } from "../../services/locationService";
+import { router, useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AtribusiCuaca from "../../components/AtribusiCuaca";
 import SearchBox from "../../components/SearchBox";
@@ -14,6 +13,8 @@ import { konversiTingkatAQI } from "../../services/weatherAdapter";
 import { ambilCuaca } from "../../services/weatherService";
 import { HasilGeocoding } from "../../types/geocoding";
 import { DataCuacaLengkap, DataKualitasUdara } from "../../types/weather";
+import { mintaIzinLokasi, ambilKoordinatSaatIni } from "../../services/locationService";
+import { ambilSemuaFavorit } from "../../services/favoritStorage";
 
 export default function HalamanUtama() {
     const [teksCari, setTeksCari] = useState("");
@@ -24,6 +25,14 @@ export default function HalamanUtama() {
     const [sedangMemuat, setSedangMemuat] = useState(false);
     const [pesanError, setPesanError] = useState<string | null>(null);
     const [pesanLokasi, setPesanLokasi] = useState<string | null>(null);
+    const [favoritIdSet, setFavoritIdSet] = useState<Set<number>>(new Set());
+
+    useFocusEffect(
+        useCallback(() => {
+            ambilSemuaFavorit().then(favs => setFavoritIdSet(new Set(favs.map(f => f.id))));
+        }, [])
+    );
+
     const teksTertunda = useDebounce(teksCari, 500);
     const requestIdRef = useRef(0); // pencegah race condition
     useEffect(() => {
@@ -103,6 +112,7 @@ export default function HalamanUtama() {
                     tingkatAQI={konversiTingkatAQI(kualitasUdara.indeksAQI)}
                     indeksAQI={kualitasUdara.indeksAQI}
                 />
+                {!favoritIdSet.has(kotaTerpilih.id) && (
                 <Button
                     title="Tambahkan ke Favorit"
                     onPress={() =>
@@ -117,6 +127,7 @@ export default function HalamanUtama() {
                         })
                     }
                 />
+                )}
                 </>
             )}
             {cuaca && (
