@@ -16,8 +16,8 @@ export interface WeatherCardProps {
 }
 
 export interface LaporanUdara {
-    kota: string;               // wajib
-    indeksAQI: number;          // wajib
-    tingkat: TingkatAQI;        // wajib
-    diperbaruiPada?: string;    // opsional
+    kota: string;
+    indeksAQI: number;
+    tingkat: TingkatAQI;
+    diperbaruiPada?: string;
 }
