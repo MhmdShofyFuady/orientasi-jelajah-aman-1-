@@ -54,3 +54,9 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Dokumentasi Status Data & Offline-First (Pertemuan 7)
+
+- **Cache-Segar vs Cache-Basi**: Cache-segar adalah salinan data lokal yang umurnya masih di bawah batas TTL (30 menit), sehingga aplikasi langsung menggunakannya tanpa perlu memanggil internet. Sebaliknya, cache-basi (*stale*) adalah data lokal yang sudah melewati 30 menit atau gagal diperbarui karena koneksi internet mati/offline, namun tetap ditampilkan sebagai cadangan terpercaya agar pengguna tidak melihat layar kosong.
+- **First-run Offline**: Merupakan kondisi saat aplikasi pertama kali dibuka dalam keadaan tanpa internet dan belum pernah ada cache tersimpan sama sekali di SQLite, sehingga aplikasi menampilkan pesan error informatif disertai tombol "Coba Lagi" tanpa crash.
+- **Pentingnya Label Status Data**: Label status data (seperti "Data terbaru dari internet", "Data tersimpan (masih segar)", dan "Mode offline - data tersimpan mungkin sudah usang") sangat penting untuk menjaga kejujuran dan transparansi informasi kepada pengguna, sehingga pengguna mengetahui secara pasti seberapa mutakhir data cuaca yang sedang mereka lihat sebelum mengambil keputusan perjalanan.
