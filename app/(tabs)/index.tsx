@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import SearchBox from "../../components/SearchBox";
 import WeatherCard from "../../components/WeatherCard";
 import AtribusiCuaca from "../../components/AtribusiCuaca";
@@ -27,12 +27,22 @@ import {
   mintaIzinLokasi,
   ambilKoordinatSaatIni,
 } from "../../services/locationService";
+import { simpanRiwayatPencarian } from "../../services/riwayatPencarianStorage";
+import { useTheme } from "../../context/ThemeContext";
 import { konversiTingkatAQI } from "../../services/weatherAdapter";
 import { labelKodeCuaca } from "../../constants/weatherCodes";
 import { HasilGeocoding } from "../../types/geocoding";
 import { HasilCuacaOffline, RingkasanKotaTersimpan } from "../../types/cache";
 
 export default function HalamanUtama() {
+  const { tema } = useTheme();
+  const params = useLocalSearchParams<{
+    kota?: string;
+    lat?: string;
+    lon?: string;
+    id?: string;
+  }>();
+
   const [teksCari, setTeksCari] = useState("");
   const [hasilPencarian, setHasilPencarian] = useState<HasilGeocoding[]>([]);
   const [kotaTerpilih, setKotaTerpilih] = useState<HasilGeocoding | null>(null);
@@ -57,6 +67,19 @@ export default function HalamanUtama() {
       .catch(() => {});
   }, []);
 
+  // Tangani perpindahan kota jika user memilih dari Riwayat Pencarian / Tab Riwayat
+  useEffect(() => {
+    if (params.kota && params.lat && params.lon) {
+      pilihKota({
+        id: Number(params.id ?? 0),
+        name: params.kota,
+        latitude: Number(params.lat),
+        longitude: Number(params.lon),
+        country: "",
+      });
+    }
+  }, [params.kota, params.lat, params.lon]);
+
   useEffect(() => {
     if (teksTertunda.trim().length === 0) {
       setHasilPencarian([]);
@@ -69,6 +92,18 @@ export default function HalamanUtama() {
 
   async function pilihKota(kota: HasilGeocoding, paksaPerbarui = false) {
     setKotaTerpilih(kota);
+
+    // Simpan ke riwayat pencarian (kecuali lokasi saat ini / id negatif)
+    if (kota.id !== -1 && kota.name !== "Lokasi Saat Ini") {
+      simpanRiwayatPencarian({
+        id: kota.id,
+        nama: kota.name,
+        latitude: kota.latitude,
+        longitude: kota.longitude,
+        country: kota.country ?? "",
+      });
+    }
+
     const idSaatIni = ++requestIdRef.current;
     setSedangMemuat(true);
     setPesanError(null);
@@ -122,7 +157,7 @@ export default function HalamanUtama() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: tema.background }}>
       <ScrollView
         contentContainerStyle={{ padding: 16, gap: 16 }}
         keyboardShouldPersistTaps="handled"
@@ -133,16 +168,43 @@ export default function HalamanUtama() {
           onPress={gunakanLokasiSaatIni}
         />
         {pesanLokasi && (
-          <Text accessibilityLabel={pesanLokasi}>{pesanLokasi}</Text>
+          <Text
+            accessibilityLabel={pesanLokasi}
+            style={{ color: tema.subtext }}
+          >
+            {pesanLokasi}
+          </Text>
         )}
         {hasilPencarian.map((kota) => (
-          <TouchableOpacity key={kota.id} onPress={() => pilihKota(kota)}>
-            <Text>{kota.name}</Text>
+          <TouchableOpacity
+            key={kota.id}
+            onPress={() => pilihKota(kota)}
+            style={{
+              padding: 12,
+              backgroundColor: tema.card,
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: tema.border,
+            }}
+          >
+            <Text style={{ color: tema.text, fontSize: 16 }}>{kota.name}</Text>
+            {kota.country ? (
+              <Text style={{ color: tema.subtext, fontSize: 12 }}>
+                {kota.admin1 ? `${kota.admin1}, ` : ""}
+                {kota.country}
+              </Text>
+            ) : null}
           </TouchableOpacity>
         ))}
         {kotaTersimpan.length > 0 && (
-          <View style={{ gap: 6 }}>
-            <Text style={{ fontWeight: "bold" }}>
+          <View style={{ gap: 8 }}>
+            <Text
+              style={{
+                fontWeight: "bold",
+                color: tema.text,
+                fontSize: 16,
+              }}
+            >
               Tersimpan di perangkat (bisa dibuka offline)
             </Text>
             {kotaTersimpan.map((k) => (
@@ -157,16 +219,27 @@ export default function HalamanUtama() {
                     country: "",
                   })
                 }
+                style={{
+                  padding: 12,
+                  backgroundColor: tema.card,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: tema.border,
+                }}
               >
-                <Text>{k.nama}</Text>
+                <Text style={{ color: tema.text, fontWeight: "500" }}>
+                  {k.nama}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
         )}
-        {sedangMemuat && <ActivityIndicator />}
+        {sedangMemuat && <ActivityIndicator color={tema.primary} />}
         {pesanError && (
-          <View>
-            <Text accessibilityLabel={pesanError}>{pesanError}</Text>
+          <View style={{ gap: 8 }}>
+            <Text accessibilityLabel={pesanError} style={{ color: "#ef4444" }}>
+              {pesanError}
+            </Text>
             <Button
               title="Coba Lagi"
               onPress={() => kotaTerpilih && pilihKota(kotaTerpilih, true)}
@@ -184,7 +257,7 @@ export default function HalamanUtama() {
               suhu={hasil.cuaca.saatIni.suhu}
               tingkatAQI={konversiTingkatAQI(hasil.kualitasUdara.indeksAQI)}
             />
-            <Text style={{ fontSize: 12, color: "#888888" }}>
+            <Text style={{ fontSize: 12, color: tema.subtext }}>
               Kondisi: {labelKodeCuaca(hasil.cuaca.saatIni.kodeCuaca)} {"\u2022"}{" "}
               Angin {hasil.cuaca.saatIni.kecepatanAngin} km/j
             </Text>

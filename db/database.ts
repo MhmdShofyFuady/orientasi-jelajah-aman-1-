@@ -1,5 +1,6 @@
 // db/database.ts
 import * as SQLite from "expo-sqlite";
+import { Platform } from "react-native";
 
 const NAMA_DATABASE = "jelajah-aman.db";
 const VERSI_DATABASE = 2;
@@ -32,8 +33,10 @@ async function migrasiDatabase(db: SQLite.SQLiteDatabase): Promise<void> {
   if (versiSaatIni >= VERSI_DATABASE) return;
 
   if (versiSaatIni < 1) {
+    // Mode WAL hanya untuk native (Android/iOS). Pada Web (wa-sqlite/OPFS), WAL mode memicu konflik lock VFS
+    const pragmaWal = Platform.OS !== "web" ? "PRAGMA journal_mode = 'wal';" : "";
     await db.execAsync(`
-      PRAGMA journal_mode = 'wal';
+      ${pragmaWal}
       CREATE TABLE IF NOT EXISTS cache_cuaca (
         kunci TEXT PRIMARY KEY NOT NULL,
         kota_id INTEGER NOT NULL,
